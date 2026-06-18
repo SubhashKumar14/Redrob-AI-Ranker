@@ -203,6 +203,7 @@ export default function App() {
               {activeTab === 'benchmark' && (
                 <BenchmarkPage
                   candidates={candidates}
+                  API_BASE={API_BASE}
                 />
               )}
 

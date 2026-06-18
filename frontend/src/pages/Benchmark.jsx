@@ -1,9 +1,30 @@
-import React from 'react';
-import { BarChart3, CheckCircle2, ShieldCheck, Activity } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { BarChart3, CheckCircle2, ShieldCheck, Activity, Scale } from 'lucide-react';
 
-export default function BenchmarkPage({ candidates = [] }) {
+export default function BenchmarkPage({ candidates = [], API_BASE }) {
+  const [comparison, setComparison] = useState(null);
+  const [loadingComp, setLoadingComp] = useState(true);
+
+  // Fetch comparison stats on mount
+  useEffect(() => {
+    async function fetchComparison() {
+      if (!API_BASE) return;
+      try {
+        const response = await fetch(`${API_BASE}/comparison`);
+        if (response.ok) {
+          setComparison(await response.json());
+        }
+      } catch (e) {
+        console.error("Failed to fetch comparison", e);
+      } finally {
+        setLoadingComp(false);
+      }
+    }
+    fetchComparison();
+  }, [API_BASE]);
+
   // Compute YOE distribution from candidates
-  const yoeDistribution = React.useMemo(() => {
+  const yoeDistribution = useMemo(() => {
     const counts = { '3-4 YOE': 0, '5-6 YOE': 0, '7-8 YOE': 0, '9+ YOE': 0 };
     candidates.forEach(c => {
       const yoe = c.years_of_experience || 5;
@@ -16,7 +37,7 @@ export default function BenchmarkPage({ candidates = [] }) {
   }, [candidates]);
 
   // Compute confidence distribution
-  const confidenceDistribution = React.useMemo(() => {
+  const confidenceDistribution = useMemo(() => {
     const counts = { 'Very High (Score ≥ 0.8)': 0, 'High (0.70 - 0.79)': 0, 'Medium (0.55 - 0.69)': 0, 'Low (< 0.55)': 0 };
     candidates.forEach(c => {
       const score = c.score;
@@ -150,6 +171,89 @@ export default function BenchmarkPage({ candidates = [] }) {
           </div>
         </div>
       </div>
+
+      {/* Comparison results */}
+      {loadingComp ? (
+        <div className="card" style={{ marginTop: '24px', textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>
+          Loading pipeline comparison stats...
+        </div>
+      ) : (
+        comparison && (
+          <div className="card" style={{ marginTop: '24px' }}>
+            <div className="card-header" style={{ marginBottom: '16px' }}>
+              <div className="card-title">
+                <Scale className="card-title-icon" size={18} />
+                <h2>Structured vs Hybrid Pipeline Comparison</h2>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Shows how vector similarity retrieval and semantic matching shifts candidates rankings compared to a purely structured baseline.
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+              <div className="diag-item">
+                <span className="diag-label">Shortlist Overlap</span>
+                <span className="diag-value" style={{ color: 'var(--status-emerald)', fontWeight: 700 }}>
+                  {comparison.overlap_count} / 100 Candidates
+                </span>
+              </div>
+              <div className="diag-item">
+                <span className="diag-label">Avg Rank Shift</span>
+                <span className="diag-value">
+                  ±{comparison.avg_rank_change?.toFixed(1) || '0.0'} Positions
+                </span>
+              </div>
+              <div className="diag-item">
+                <span className="diag-label">Structured-only</span>
+                <span className="diag-value">
+                  {comparison.structured_only_count} Candidates
+                </span>
+              </div>
+              <div className="diag-item">
+                <span className="diag-label">Hybrid-only Refinements</span>
+                <span className="diag-value">
+                  {comparison.hybrid_only_count} Candidates
+                </span>
+              </div>
+            </div>
+
+            {comparison.items && comparison.items.length > 0 && (
+              <div className="table-wrapper">
+                <table className="candidate-list-table">
+                  <thead>
+                    <tr>
+                      <th>Candidate ID</th>
+                      <th>Structured Rank</th>
+                      <th>Hybrid Rank</th>
+                      <th>Rank Shift</th>
+                      <th>Structured Score</th>
+                      <th>Hybrid Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparison.items.slice(0, 5).map(item => {
+                      const diff = item.rank_change || 0;
+                      const diffClass = diff > 0 ? 'rank-improved' : diff < 0 ? 'rank-declined' : 'rank-same';
+                      const diffText = diff > 0 ? `+${diff}` : diff === 0 ? '0' : `${diff}`;
+                      
+                      return (
+                        <tr key={item.candidate_id}>
+                          <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{item.candidate_id}</td>
+                          <td>#{item.structured_rank}</td>
+                          <td>#{item.hybrid_rank || 'N/A'}</td>
+                          <td className={diffClass} style={{ fontWeight: 600 }}>{diffText}</td>
+                          <td>{item.structured_score.toFixed(4)}</td>
+                          <td>{item.hybrid_score ? item.hybrid_score.toFixed(4) : 'N/A'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )
+      )}
     </div>
   );
 }
