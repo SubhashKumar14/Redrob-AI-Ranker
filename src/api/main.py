@@ -30,14 +30,14 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Add src to path
+# Add src to path so pipeline modules are importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ingestion.loader import CandidateLoader
-from features.extractor import FeatureExtractor
-from scoring.ensemble import EnsembleScorer
-from explanation.generator import ReasoningGenerator
-from output.formatter import SubmissionFormatter
+# NOTE: Heavy pipeline modules (CandidateLoader, FeatureExtractor, EnsembleScorer,
+# ReasoningGenerator, SubmissionFormatter) are intentionally NOT imported here at
+# module level. They are imported lazily inside the /rank/* endpoints so that the
+# API server can boot on lightweight deployments (Render free tier) without
+# requiring sentence-transformers, faiss, or torch.
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -363,16 +363,22 @@ async def get_diagnostics():
     # Check pipeline
     pipeline = "hybrid" if HYBRID_CSV.exists() else "structured"
     
-    # Check validator
+    # Check validator (optional — only runs if validate_submission.py is present locally)
     csv_path = SUBMISSION_CSV if SUBMISSION_CSV.exists() else STRUCTURED_CSV
     validator_status = "not_checked"
-    if csv_path.exists():
+    validator_script = BASE_DIR.parent / "challenge_data" / "validate_submission.py"
+    if csv_path.exists() and validator_script.exists():
         import subprocess
-        result = subprocess.run(
-            ["python", str(BASE_DIR.parent / "challenge_data" / "validate_submission.py"), str(csv_path)],
-            capture_output=True, text=True, cwd=str(BASE_DIR)
-        )
-        validator_status = "PASS" if result.returncode == 0 else f"FAIL: {result.stdout}"
+        try:
+            result = subprocess.run(
+                ["python", str(validator_script), str(csv_path)],
+                capture_output=True, text=True, cwd=str(BASE_DIR), timeout=10
+            )
+            validator_status = "PASS" if result.returncode == 0 else f"FAIL: {result.stdout[:200]}"
+        except Exception:
+            validator_status = "not_available"
+    elif not validator_script.exists():
+        validator_status = "not_available"
     
     return DiagnosticsResponse(
         pipeline=pipeline,
@@ -490,6 +496,16 @@ async def rank_sample(candidates_file: UploadFile = File(...)):
     Rank uploaded candidates against the Senior AI Engineer JD.
     Accepts JSONL or JSON file. Max 1000 candidates. Returns ranked CSV.
     """
+    # Lazy imports — only loaded when this endpoint is called
+    try:
+        from ingestion.loader import CandidateLoader
+        from features.extractor import FeatureExtractor
+        from scoring.ensemble import EnsembleScorer
+        from explanation.generator import ReasoningGenerator
+        from output.formatter import SubmissionFormatter
+    except ImportError as e:
+        raise HTTPException(503, f"Live ranking pipeline not available in this deployment: {e}")
+
     start = time.time()
     suffix = ".jsonl" if candidates_file.filename.endswith(".jsonl") else ".json"
     
@@ -520,6 +536,8 @@ async def rank_sample(candidates_file: UploadFile = File(...)):
 
         return FileResponse(output_path, filename="ranked_candidates.csv", media_type="text/csv")
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Ranking failed: {e}", exc_info=True)
         raise HTTPException(500, f"Ranking failed: {str(e)}")
@@ -528,6 +546,15 @@ async def rank_sample(candidates_file: UploadFile = File(...)):
 @app.post("/rank/json", response_model=RankResponse, summary="Rank candidates, return JSON")
 async def rank_json(candidates_file: UploadFile = File(...)):
     """Rank uploaded candidates and return JSON results for frontend integration."""
+    # Lazy imports — only loaded when this endpoint is called
+    try:
+        from ingestion.loader import CandidateLoader
+        from features.extractor import FeatureExtractor
+        from scoring.ensemble import EnsembleScorer
+        from explanation.generator import ReasoningGenerator
+    except ImportError as e:
+        raise HTTPException(503, f"Live ranking pipeline not available in this deployment: {e}")
+
     start = time.time()
     suffix = ".jsonl" if candidates_file.filename.endswith(".jsonl") else ".json"
     
@@ -566,6 +593,8 @@ async def rank_json(candidates_file: UploadFile = File(...)):
             pipeline="structured",
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Ranking failed: {e}", exc_info=True)
         raise HTTPException(500, f"Ranking failed: {str(e)}")

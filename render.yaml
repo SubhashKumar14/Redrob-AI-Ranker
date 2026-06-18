@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: redrob-ai-ranker
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements-api.txt
+    startCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /health
