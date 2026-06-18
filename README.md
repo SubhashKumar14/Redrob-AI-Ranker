@@ -17,21 +17,20 @@
 | GitHub | [SubhashKumar14/Redrob-AI-Ranker](https://github.com/SubhashKumar14/Redrob-AI-Ranker) |
 
 ---
-
 ## Quick Start (Structured Pipeline — ~52 seconds)
 
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Rank all 100K candidates
+# 2. Rank all 100K candidates (Structured baseline)
 python rank.py \
   --candidates /path/to/candidates.jsonl \
-  --output team_code_liberators.csv \
+  --output outputs/structured_baseline.csv \
   --verbose
 
 # 3. Validate
-python /path/to/validate_submission.py team_code_liberators.csv
+python /path/to/validate_submission.py outputs/structured_baseline.csv
 # Output: Submission is valid.
 ```
 
@@ -39,23 +38,27 @@ python /path/to/validate_submission.py team_code_liberators.csv
 
 ## Quick Start (Hybrid Semantic Pipeline — ~25 min precompute, then ~60s)
 
+> [!NOTE]
+> The precomputed embeddings and FAISS index (`precomputed/`) are **not** committed to this repository because the FAISS index is **153.6 MB**, which exceeds GitHub's **100 MB per-file size limit**. You must run the precomputation script once locally before executing the advanced hybrid pipeline.
+
 ```bash
-# Precompute embeddings + FAISS index (run once)
+# 1. Precompute embeddings + FAISS index (run once, takes ~25 minutes on CPU)
 python precompute.py \
   --candidates /path/to/candidates.jsonl \
   --output-dir ./precomputed \
   --batch-size 128
 
-# Run hybrid ranker
+# 2. Run hybrid ranker (with vector search retrieval)
 python rank_advanced.py \
   --candidates /path/to/candidates.jsonl \
   --precomputed-dir ./precomputed \
-  --output team_code_liberators_hybrid.csv \
+  --output team_code_liberators.csv \
   --use-semantic \
   --verbose
 
-# Validate
-python /path/to/validate_submission.py team_code_liberators_hybrid.csv
+# 3. Validate final submission
+python /path/to/validate_submission.py team_code_liberators.csv
+# Output: Submission is valid.
 ```
 
 ---
@@ -95,9 +98,12 @@ code_liberators/
 ├── rank_advanced.py             # Hybrid pipeline (semantic + FAISS)
 ├── precompute.py                # One-time embedding precomputation
 │
-├── team_code_liberators.csv     # Final validated submission (100 rows)
-├── team_code_liberators_structured.csv   # Structured-only baseline
-├── submission_metadata.yaml    # Real submission details
+├── team_code_liberators.csv     # Final validated submission (100 rows, hybrid winner)
+├── submission_metadata.yaml     # Real submission details
+│
+├── outputs/                     # Ranked output archives
+│   ├── final_submission.csv     # Copy of final winning rankings
+│   └── structured_baseline.csv  # Structured baseline rankings
 │
 ├── config/
 │   ├── title_tiers.yaml        # v2: Software Eng moved to moderate (0.55)
