@@ -39,12 +39,14 @@ def main():
     )
     parser.add_argument(
         "--candidates",
-        required=True,
-        help="Path to candidates.jsonl (or .jsonl.gz) file",
+        required=False,
+        default="challenge_data/candidates.jsonl",
+        help="Path to candidates.jsonl file",
     )
     parser.add_argument(
         "--output",
-        required=True,
+        required=False,
+        default="team_code_liberators.csv",
         help="Path for output CSV (e.g., team_code_liberators.csv)",
     )
     parser.add_argument(
@@ -82,7 +84,22 @@ def main():
     # Stage 1: Load candidates
     # ------------------------------------------------------------------
     log("Loading candidates...")
-    loader = CandidateLoader(args.candidates)
+    candidates_path = args.candidates
+    if not Path(candidates_path).exists():
+        fallbacks = [
+            "../challenge_data/India_runs_data_and_ai_challenge/[PUB] India_runs_data_and_ai_challenge/India_runs_data_and_ai_challenge/candidates.jsonl",
+            "challenge_data/India_runs_data_and_ai_challenge/[PUB] India_runs_data_and_ai_challenge/India_runs_data_and_ai_challenge/candidates.jsonl",
+            "challenge_data/candidates.jsonl",
+            "../challenge_data/candidates.jsonl"
+        ]
+        for f in fallbacks:
+            if Path(f).exists():
+                candidates_path = f
+                break
+        else:
+            raise FileNotFoundError(f"Candidates file not found at '{args.candidates}' or fallback paths. Please specify via --candidates.")
+
+    loader = CandidateLoader(candidates_path)
     total_candidates = loader.count()
     log(f"Total candidates to rank: {total_candidates:,}")
 

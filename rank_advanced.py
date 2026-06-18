@@ -72,8 +72,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Advanced candidate ranker with semantic retrieval"
     )
-    parser.add_argument("--candidates", required=True, help="Path to candidates.jsonl")
-    parser.add_argument("--output", required=True, help="Output CSV path")
+    parser.add_argument("--candidates", required=False, default="challenge_data/candidates.jsonl", help="Path to candidates.jsonl")
+    parser.add_argument("--output", required=False, default="team_code_liberators_hybrid.csv", help="Output CSV path")
     parser.add_argument("--precomputed-dir", default="./precomputed",
                         help="Directory with precomputed embeddings")
     parser.add_argument("--jd-text", default=None,
@@ -103,7 +103,22 @@ def main():
     # Load candidates
     # ------------------------------------------------------------------
     log("Loading candidates...")
-    loader = CandidateLoader(args.candidates)
+    candidates_path = args.candidates
+    if not Path(candidates_path).exists():
+        fallbacks = [
+            "../challenge_data/India_runs_data_and_ai_challenge/[PUB] India_runs_data_and_ai_challenge/India_runs_data_and_ai_challenge/candidates.jsonl",
+            "challenge_data/India_runs_data_and_ai_challenge/[PUB] India_runs_data_and_ai_challenge/India_runs_data_and_ai_challenge/candidates.jsonl",
+            "challenge_data/candidates.jsonl",
+            "../challenge_data/candidates.jsonl"
+        ]
+        for f in fallbacks:
+            if Path(f).exists():
+                candidates_path = f
+                break
+        else:
+            raise FileNotFoundError(f"Candidates file not found at '{args.candidates}' or fallback paths. Please specify via --candidates.")
+
+    loader = CandidateLoader(candidates_path)
     total = loader.count()
     log(f"Total candidates: {total:,}")
 

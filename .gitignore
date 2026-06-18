@@ -7,6 +7,9 @@
 *.json.gz
 candidates.jsonl
 challenge_data/
+team_code_liberators_hybrid.csv
+team_code_liberators_test.csv
+team_code_liberators_test_hybrid.csv
 
 # ─── Precomputed embeddings/index ───
 precomputed/
