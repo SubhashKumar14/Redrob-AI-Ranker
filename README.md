@@ -281,4 +281,4 @@ pip install -r requirements.txt
 
 ---
 
-*Built by Team Code Liberators for the INDIA.RUNS Data & AI Challenge*
+*Built by Team Code Liberators for the INDIA.RUNS Data & AI Challenge.*
