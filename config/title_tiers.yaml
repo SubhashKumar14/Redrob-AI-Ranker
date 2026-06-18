@@ -1,0 +1,92 @@
+# Title taxonomy for Senior AI Engineer — Founding Team role
+# Updated v2: Generic software titles moved from "strong" (0.8) to "moderate" (0.55)
+# Rationale: JD explicitly asks for AI/ML specialists, not generic SWEs.
+# Tier scores: 1.0 = ideal, 0.75 = strong, 0.55 = moderate, 0.2 = poor, 0.0 = mismatch
+
+tiers:
+  ideal:
+    score: 1.0
+    titles:
+      - AI Engineer
+      - ML Engineer
+      - Machine Learning Engineer
+      - Senior AI Engineer
+      - Senior ML Engineer
+      - Senior Machine Learning Engineer
+      - Applied ML Engineer
+      - AI Research Engineer
+      - NLP Engineer
+      - Senior NLP Engineer
+      - Search Engineer
+      - Recommendation Systems Engineer
+      - Computer Vision Engineer
+      - Staff Machine Learning Engineer
+      - Lead AI Engineer
+      - Senior Applied Scientist
+      - Applied Scientist
+      - AI Research Scientist
+      - Deep Learning Engineer
+      - Ranking Engineer
+
+  strong:
+    score: 0.75
+    titles:
+      - Data Scientist
+      - Senior Data Scientist
+      - Data Engineer
+      - Senior Data Engineer
+      - Senior Software Engineer (ML)
+      - AI Specialist
+      - Junior ML Engineer
+      - Analytics Engineer
+      - Research Scientist
+
+  moderate:
+    score: 0.55
+    titles:
+      - Software Engineer
+      - Senior Software Engineer
+      - Backend Engineer
+      - Full Stack Developer
+      - Platform Engineer
+      - Infrastructure Engineer
+
+  moderate_low:
+    score: 0.4
+    titles:
+      - Cloud Engineer
+      - DevOps Engineer
+      - Java Developer
+      - .NET Developer
+      - Mobile Developer
+      - Frontend Engineer
+      - QA Engineer
+
+  poor:
+    score: 0.2
+    titles:
+      - Business Analyst
+      - Project Manager
+      - Operations Manager
+      - Sales Executive
+      - Customer Support
+      - Content Writer
+      - Product Manager
+
+  mismatch:
+    score: 0.0
+    titles:
+      - HR Manager
+      - Accountant
+      - Mechanical Engineer
+      - Civil Engineer
+      - Graphic Designer
+      - Marketing Manager
+      - Recruiter
+      - HR Specialist
+
+title_embedding_hints:
+  ideal_keywords: ["AI", "ML", "Machine Learning", "Deep Learning", "NLP", "Search", "Recommendation", "Ranking"]
+  strong_keywords: ["Data Scientist", "Data Engineer", "Analytics"]
+  moderate_keywords: ["Software Engineer", "Backend", "Full Stack", "Platform"]
+  poor_keywords: ["Analyst", "Manager", "Support", "Writer", "Sales"]

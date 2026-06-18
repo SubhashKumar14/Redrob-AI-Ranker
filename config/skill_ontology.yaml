@@ -1,0 +1,92 @@
+# JD-derived skill ontology for Senior AI Engineer — Founding Team
+# Three tiers with differential weights to penalize keyword stuffing
+
+tiers:
+  core:
+    weight: 3.0
+    description: "Absolutely required skills — must have production experience"
+    skills:
+      - Python
+      - Embeddings
+      - Vector Search
+      - LLMs
+      - Information Retrieval
+      - Ranking
+      - Evaluation
+      - NDCG
+      - MRR
+      - MAP
+      - Sentence Transformers
+      - FAISS
+      - Hybrid Search
+      - Retrieval-Augmented Generation
+      - RAG
+      - Fine-tuning LLMs
+      - Fine-tuning
+      - Hugging Face Transformers
+
+  relevant:
+    weight: 2.0
+    description: "Highly relevant skills that differentiate top candidates"
+    skills:
+      - Pinecone
+      - Weaviate
+      - Qdrant
+      - Milvus
+      - Elasticsearch
+      - OpenSearch
+      - LoRA
+      - QLoRA
+      - PEFT
+      - LangChain
+      - LlamaIndex
+      - MLflow
+      - MLOps
+      - BentoML
+      - TensorFlow
+      - PyTorch
+      - scikit-learn
+      - NLP
+      - Machine Learning
+      - Deep Learning
+      - Recommendation Systems
+      - Prompt Engineering
+
+  nice_to_have:
+    weight: 1.0
+    description: "Bonus skills that add value but aren't required"
+    skills:
+      - Distributed Systems
+      - Large-scale Inference
+      - Open-source ML libraries
+      - Reinforcement Learning
+      - GANs
+      - Diffusion Models
+      - Computer Vision
+      - OpenCV
+      - Generative AI
+      - Natural Language Processing
+      - Information Retrieval Systems
+      - Ranking Systems
+
+# Anti-signals: skills that suggest non-AI background when dominant
+# These don't penalize directly but are used in career trajectory analysis
+anti_signals:
+  - Sales
+  - Accounting
+  - Excel
+  - Salesforce CRM
+  - Project Management
+  - Scrum
+  - Agile
+  - HR
+  - Recruitment
+  - Content Writing
+  - SEO
+  - Social Media Marketing
+  - Graphic Design
+  - CAD
+  - SolidWorks
+  - AutoCAD
+  - Civil Engineering
+  - Mechanical Engineering

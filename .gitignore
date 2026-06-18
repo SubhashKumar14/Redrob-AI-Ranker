@@ -1,0 +1,74 @@
+# .gitignore for Code Liberators — Redrob AI Ranker
+# =====================================================
+# IMPORTANT: Do NOT commit large data files or generated artifacts
+
+# ─── Data files (too large for git) ───
+*.jsonl
+*.json.gz
+candidates.jsonl
+challenge_data/
+
+# ─── Precomputed embeddings/index ───
+precomputed/
+*.index
+candidate_ids.pkl
+metadata.pkl
+
+# ─── Python ───
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.env
+.venv
+venv/
+env/
+
+# ─── Node / Frontend ───
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+.npm
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── Testing ───
+.pytest_cache/
+*.coverage
+htmlcov/
+.tox/
+
+# ─── Logs ───
+*.log
+logs/
+
+# ─── Temp files ───
+*.tmp
+*.bak
+*~
+
+# ─── What SHOULD be committed ───
+# team_code_liberators.csv        ← Final submission (small, 100 rows)
+# team_code_liberators_structured.csv ← Structured baseline
+# submission_metadata.yaml        ← Real contact info
+# config/*.yaml                   ← Tuning configs
+# src/                            ← All source code
+# tests/                          ← All tests
+# docs/                           ← Documentation and deck
+# frontend/src/                   ← Frontend source
+# requirements.txt
+# README.md
+# rank.py, rank_advanced.py, precompute.py

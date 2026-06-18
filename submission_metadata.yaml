@@ -1,0 +1,115 @@
+# Code Liberators — Submission Metadata
+# INDIA.RUNS Data & AI Challenge: Intelligent Candidate Discovery & Ranking
+# Auto-updated: 2026-06-18 with full 100K dataset results
+
+submission:
+  team_name: "Code Liberators"
+  challenge_name: "INDIA.RUNS Data & AI Challenge: Intelligent Candidate Discovery & Ranking"
+  submission_version: 2
+  submission_date: "2026-06-18"
+
+primary_contact:
+  name: "Subhash Kumar"
+  email: "subhash1403kumar@gmail.com"
+  phone: "+91 6302181675"
+
+repository:
+  github: "https://github.com/SubhashKumar14/Redrob-AI-Ranker"
+  branch: "main"
+  sandbox_url: "TODO: Deploy to Render/Railway and update this URL"
+
+submission_artifacts:
+  submission_csv: "team_code_liberators.csv"
+  structured_csv: "team_code_liberators_structured.csv"
+  report: "docs/FINAL_REPORT.md"
+  deck: "docs/deck.md"
+  api_server: "src/api/main.py"
+  entry_point: "rank.py"
+  readme: "README.md"
+
+methodology_summary: |
+  Three-stage hybrid ranking pipeline:
+
+  Stage 1 — Structured Feature Extraction (100K candidates, ~50 seconds):
+    - TitleMatcher: Hierarchical taxonomy (ideal/strong/moderate/poor/mismatch) scoring
+    - CareerAnalyzer: Product-vs-services detection, job hopping penalty, tenure scoring
+    - SkillAnalyzer: Quality-weighted scoring (endorsements × duration × proficiency)
+    - BehavioralScorer: Open-to-work, notice period, recruiter response rate, recency
+    - HoneypotDetector: 8 independent checks with progressive penalty
+
+  Stage 2 — Weighted Ensemble Scoring:
+    - Weights: Title 0.30, Career 0.20, Skills 0.20, YOE 0.15, Education 0.05, Semantic 0.10
+    - Behavioral multiplier B(c) ∈ [0.7, 1.1] calibrates final score
+    - Honeypot penalty H(c) ∈ [0, 1] suppresses flagged candidates
+    - Final: score = B(c) × H(c) × (w1×T + w2×C + w3×S + w4×Y + w5×E + w6×Sem)
+
+  Stage 3 — Template-Based Reasoning:
+    - Score-derived, grounded, specific, varied (20+ patterns)
+    - No hallucination: facts drawn only from scored features
+    - Grammar-correct singular/plural handling
+
+performance_metrics:
+  total_candidates: 100000
+  scored_candidates: 75077
+  pre_filtered: 24923
+  runtime_seconds: 51.66
+  runtime_margin: "5x under the 5-minute limit"
+  honeypot_rate_top100: "0%"
+  validator_status: "PASS"
+  top10_avg_score: 0.7981
+  top_score: 0.8387
+
+tech_stack:
+  language: Python 3.13
+  dependencies_core:
+    - numpy
+    - pandas
+    - scipy
+    - pyyaml
+    - tqdm
+  dependencies_api:
+    - fastapi
+    - uvicorn
+  dependencies_semantic:
+    - sentence-transformers (BAAI/bge-small-en-v1.5)
+    - faiss-cpu
+  dependencies_dev:
+    - pytest
+
+constraints:
+  cpu_only: true
+  no_paid_apis: true
+  no_hosted_inference: true
+  deterministic: true
+  fallback_if_ml_unavailable: true
+
+reproduce_command: |
+  # Install dependencies
+  pip install -r requirements.txt
+
+  # Run structured ranking (no ML packages needed)
+  python rank.py \
+    --candidates ./candidates.jsonl \
+    --output ./team_code_liberators.csv \
+    --verbose
+
+  # Validate
+  python ../challenge_data/validate_submission.py team_code_liberators.csv
+
+  # (Optional) Precompute embeddings for hybrid pipeline
+  python precompute.py \
+    --candidates ./candidates.jsonl \
+    --output-dir ./precomputed
+
+  # (Optional) Run hybrid pipeline
+  python rank_advanced.py \
+    --candidates ./candidates.jsonl \
+    --precomputed-dir ./precomputed \
+    --output ./team_code_liberators_hybrid.csv \
+    --use-semantic --verbose
+
+  # Start API sandbox
+  uvicorn src.api.main:app --port 8000 --reload
+
+  # Start frontend dashboard
+  cd frontend && npm install && npm run dev

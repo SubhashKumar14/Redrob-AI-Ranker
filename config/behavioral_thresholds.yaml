@@ -1,0 +1,54 @@
+# Behavioral signal thresholds and scoring parameters
+# Used to compute the behavioral multiplier B(c)
+
+open_to_work:
+  active: 1.0      # open_to_work_flag = true
+  inactive: 0.6   # open_to_work_flag = false
+
+response_rate:
+  formula: "0.3 + 0.7 * rate"
+  min: 0.3
+  max: 1.0
+
+notice_period:
+  ideal_days: 30
+  scoring:
+    - max_days: 30
+      score: 1.0
+      label: "Excellent"
+    - max_days: 60
+      score: 0.85
+      label: "Good"
+    - max_days: 90
+      score: 0.70
+      label: "Acceptable"
+    - max_days: 120
+      score: 0.55
+      label: "Concerning"
+    - max_days: 150
+      score: 0.40
+      label: "Poor"
+    - max_days: 999
+      score: 0.25
+      label: "Very Poor"
+
+engagement:
+  profile_views_weight: 0.3
+  saved_by_recruiters_weight: 0.4
+  search_appearance_weight: 0.3
+  normalize_at: 50  # divide by this value, cap at 1.0
+
+activity:
+  decay_half_life_days: 90  # exp(-days/90)
+
+profile_completeness:
+  threshold_good: 70
+  threshold_poor: 40
+
+github:
+  no_github_score: 0.0  # -1 in data means no GitHub
+  normalize_at: 50
+
+interview_completion:
+  threshold_good: 0.7
+  threshold_poor: 0.3
