@@ -74,9 +74,19 @@ app.add_middleware(
 # ─────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent.parent.parent
 SUBMISSION_CSV = BASE_DIR / "team_code_liberators.csv"
-STRUCTURED_CSV = BASE_DIR / "team_code_liberators_structured.csv"
-HYBRID_CSV = BASE_DIR / "team_code_liberators_hybrid.csv"
+STRUCTURED_CSV = BASE_DIR / "outputs" / "structured_baseline.csv"
+HYBRID_CSV = BASE_DIR / "team_code_liberators.csv"
 PRECOMPUTED_DIR = BASE_DIR / "precomputed"
+
+# Load cached candidate profile details if available
+_top100_details: Dict[str, Dict] = {}
+try:
+    _details_path = Path(__file__).parent / "top100_details.json"
+    if _details_path.exists():
+        with open(_details_path, 'r', encoding='utf-8') as f:
+            _top100_details = json.load(f)
+except Exception as e:
+    logger.error(f"Failed to load top100_details.json: {e}")
 
 # ─────────────────────────────────────────────────────────────────────
 # Cached data
@@ -95,12 +105,16 @@ def _load_csv_ranking(csv_path: Path) -> List[Dict]:
     with open(csv_path, 'r', encoding='utf-8', newline='') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            rows.append({
-                'candidate_id': row['candidate_id'],
+            cid = row['candidate_id']
+            row_dict = {
+                'candidate_id': cid,
                 'rank': int(row['rank']),
                 'score': float(row['score']),
                 'reasoning': row['reasoning'],
-            })
+            }
+            if cid in _top100_details:
+                row_dict.update(_top100_details[cid])
+            rows.append(row_dict)
     return rows
 
 

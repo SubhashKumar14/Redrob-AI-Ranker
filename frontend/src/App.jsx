@@ -13,11 +13,12 @@ import JDAnalysis from './pages/JDAnalysis';
 import PipelinePage from './pages/Pipeline';
 import Diagnostics from './pages/Diagnostics';
 import BenchmarkPage from './pages/Benchmark';
+import FeatureImportancePage from './pages/FeatureImportance';
 import ExportCsv from './pages/ExportCsv';
 import SubmissionPackage from './pages/SubmissionPackage';
 import SettingsPage from './pages/Settings';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -74,32 +75,59 @@ export default function App() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      setError(null);
+      let isOnline = false;
+
+      // 1. Fetch health
       try {
         const hr = await fetch(`${API_BASE}/health`);
         if (hr.ok) {
           setHealth(await hr.json());
-          setApiOnline(true);
+          isOnline = true;
         }
+      } catch (e) {
+        console.error("Health check failed (could be blocked by Brave Shields or adblockers):", e);
+      }
 
+      // 2. Fetch candidates
+      try {
         const cr = await fetch(`${API_BASE}/candidates?limit=100`);
         if (cr.ok) {
           const cData = await cr.json();
           setCandidates(cData.candidates || []);
+          isOnline = true;
         }
-
-        const jr = await fetch(`${API_BASE}/jd`);
-        if (jr.ok) setJd(await jr.json());
-
-        const dr = await fetch(`${API_BASE}/diagnostics`);
-        if (dr.ok) setDiagnostics(await dr.json());
-
       } catch (e) {
-        setError('API server not reachable. Start local dev server with: uvicorn src.api.main:app --port 8000');
-        setApiOnline(false);
-        setCandidates([]);
-      } finally {
-        setLoading(false);
+        console.error("Candidates fetch failed:", e);
       }
+
+      // 3. Fetch JD
+      try {
+        const jr = await fetch(`${API_BASE}/jd`);
+        if (jr.ok) {
+          setJd(await jr.json());
+        }
+      } catch (e) {
+        console.error("JD fetch failed:", e);
+      }
+
+      // 4. Fetch diagnostics
+      try {
+        const dr = await fetch(`${API_BASE}/diagnostics`);
+        if (dr.ok) {
+          setDiagnostics(await dr.json());
+        }
+      } catch (e) {
+        console.error("Diagnostics fetch failed:", e);
+      }
+
+      setApiOnline(isOnline);
+      if (!isOnline) {
+        setError(
+          `API server not reachable. Please check that your backend is running at ${API_BASE}. If it is running, Brave Shields or an ad-blocker may be blocking cross-origin requests. Try turning off shields or disabling your ad-blocker for this site.`
+        );
+      }
+      setLoading(false);
     }
     fetchData();
   }, []);
@@ -188,6 +216,10 @@ export default function App() {
                 <JDAnalysis
                   jd={jd}
                 />
+              )}
+
+              {activeTab === 'feature_importance' && (
+                <FeatureImportancePage />
               )}
 
               {activeTab === 'pipeline' && (

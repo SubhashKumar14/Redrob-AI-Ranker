@@ -8,22 +8,29 @@ export default function CandidateDrawer({ candidate, onClose }) {
   // Fake timeline data generated deterministically based on candidate ID
   const numId = parseInt(candidate.candidate_id.replace(/\D/g, ''), 10) || 0;
   
-  // Deterministic skills parsed based on YOE / ID
-  const skillsList = [
-    { name: 'Python', endorsements: 12 + (numId % 8), months: 36 + (numId % 12) },
-    { name: 'PyTorch', endorsements: 8 + (numId % 6), months: 24 + (numId % 8) },
-    { name: 'Machine Learning', endorsements: 15 + (numId % 10), months: 48 + (numId % 12) },
-    { name: 'Transformers/LLMs', endorsements: 5 + (numId % 5), months: 12 + (numId % 6) },
-    { name: 'SQL', endorsements: 10 + (numId % 4), months: 40 + (numId % 10) },
-  ];
+  // Real skills if available, otherwise deterministic fallback
+  const skillsList = candidate.skills 
+    ? candidate.skills.map(s => ({
+        name: s.name,
+        endorsements: s.endorsements || (10 + (numId % 5)),
+        months: s.duration_months || (24 + (numId % 12))
+      })).slice(0, 6)
+    : [
+        { name: 'Python', endorsements: 12 + (numId % 8), months: 36 + (numId % 12) },
+        { name: 'PyTorch', endorsements: 8 + (numId % 6), months: 24 + (numId % 8) },
+        { name: 'Machine Learning', endorsements: 15 + (numId % 10), months: 48 + (numId % 12) },
+        { name: 'Transformers/LLMs', endorsements: 5 + (numId % 5), months: 12 + (numId % 6) },
+        { name: 'SQL', endorsements: 10 + (numId % 4), months: 40 + (numId % 10) },
+      ];
 
-  // Deterministic career history
+  // Real career history current company
+  const currentCompany = candidate.current_company || ["Turing Solutions", "DeepMind Lab", "Vercel Inc", "Linear Corp", "Stripe ML"][numId % 5];
   const careerHistory = [
     {
       title: candidate.current_title || "Senior AI Engineer",
-      company: ["Turing Solutions", "DeepMind Lab", "Vercel Inc", "Linear Corp", "Stripe ML"][numId % 5],
+      company: currentCompany,
       period: "2024 - Present",
-      location: "San Francisco, CA (Remote)",
+      location: candidate.country ? `${candidate.country} (Remote)` : "San Francisco, CA (Remote)",
       description: "Leading implementation of core transformer layers, scaling vector databases, and matching embeddings with sub-millisecond retrieve latency."
     },
     {
@@ -37,16 +44,21 @@ export default function CandidateDrawer({ candidate, onClose }) {
 
   // Helper score breakdown variables
   const weights = {
-    title: candidate.title_score || 0.85,
-    career: candidate.career_score || 0.78,
-    skills: candidate.skills_score || 0.82,
-    yoe: candidate.yoe_score || 0.90,
+    title: candidate.title_score !== undefined ? candidate.title_score : 0.85,
+    career: candidate.career_score !== undefined ? candidate.career_score : 0.78,
+    skills: candidate.skill_score !== undefined ? candidate.skill_score : (candidate.skills_score !== undefined ? candidate.skills_score : 0.82),
+    yoe: candidate.yoe_score !== undefined ? candidate.yoe_score : 0.90,
   };
 
   // Calibration multiplier B(c)
   const isAvailable = (numId % 3) === 0;
-  const noticePeriod = isAvailable ? "Immediate" : "30 Days";
-  const responseRate = 75 + (numId % 20);
+  const noticePeriod = candidate.behavioral && candidate.behavioral.notice_period_days !== undefined
+    ? `${candidate.behavioral.notice_period_days} Days`
+    : (isAvailable ? "Immediate" : "30 Days");
+    
+  const responseRate = candidate.behavioral && candidate.behavioral.recruiter_response_rate !== undefined
+    ? Math.round(candidate.behavioral.recruiter_response_rate * 100)
+    : (75 + (numId % 20));
 
   return (
     <div style={{

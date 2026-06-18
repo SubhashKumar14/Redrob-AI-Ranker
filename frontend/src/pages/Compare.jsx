@@ -12,6 +12,15 @@ export default function Compare({ candidates = [] }) {
   const numA = candA ? parseInt(candA.candidate_id.replace(/\D/g, ''), 10) || 0 : 0;
   const numB = candB ? parseInt(candB.candidate_id.replace(/\D/g, ''), 10) || 0 : 0;
 
+  const noticeA = candA?.behavioral?.notice_period_days !== undefined ? `${candA.behavioral.notice_period_days} Days` : ((numA % 3 === 0) ? "Immediate" : "30 Days");
+  const noticeB = candB?.behavioral?.notice_period_days !== undefined ? `${candB.behavioral.notice_period_days} Days` : ((numB % 3 === 0) ? "Immediate" : "30 Days");
+
+  const rawNoticeA = candA?.behavioral?.notice_period_days !== undefined ? candA.behavioral.notice_period_days : ((numA % 3 === 0) ? 0 : 30);
+  const rawNoticeB = candB?.behavioral?.notice_period_days !== undefined ? candB.behavioral.notice_period_days : ((numB % 3 === 0) ? 0 : 30);
+
+  const rrA = candA?.behavioral?.recruiter_response_rate !== undefined ? Math.round(candA.behavioral.recruiter_response_rate * 100) : (75 + (numA % 20));
+  const rrB = candB?.behavioral?.recruiter_response_rate !== undefined ? Math.round(candB.behavioral.recruiter_response_rate * 100) : (75 + (numB % 20));
+
   // Comparison row component
   const CompareRow = ({ label, valA, valB, isBetterA, isBetterB }) => (
     <div style={{
@@ -146,17 +155,17 @@ export default function Compare({ candidates = [] }) {
             />
             <CompareRow
               label="Notice Period Availability"
-              valA={numA % 3 === 0 ? "Immediate" : "30 Days"}
-              valB={numB % 3 === 0 ? "Immediate" : "30 Days"}
-              isBetterA={numA % 3 === 0 && numB % 3 !== 0}
-              isBetterB={numB % 3 === 0 && numA % 3 !== 0}
+              valA={noticeA}
+              valB={noticeB}
+              isBetterA={rawNoticeA < rawNoticeB}
+              isBetterB={rawNoticeB < rawNoticeA}
             />
             <CompareRow
               label="Recruiter Response Rate"
-              valA={`${75 + (numA % 20)}%`}
-              valB={`${75 + (numB % 20)}%`}
-              isBetterA={(numA % 20) > (numB % 20)}
-              isBetterB={(numB % 20) > (numA % 20)}
+              valA={`${rrA}%`}
+              valB={`${rrB}%`}
+              isBetterA={rrA > rrB}
+              isBetterB={rrB > rrA}
             />
           </div>
 
